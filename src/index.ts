@@ -226,6 +226,7 @@ const init = (): boolean => {
             foreverBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
             if (subscription != null) {
                 subscription.unsubscribe()
+                subscription = null
             } else {
                 console.error("subscription is null")
             }
