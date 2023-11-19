@@ -1,6 +1,6 @@
 import * as O from "fp-ts/Option"
 import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray"
-import { Subject, BehaviorSubject } from "rxjs"
+import { Subject, Subscription } from "rxjs"
 
 const GENERATE_BUTTON_CLASSNAME = "kMUUYF"
 // observe this at start
@@ -26,11 +26,11 @@ interface GeneratedEvent {
 const generatedSubject = new Subject<GeneratedEvent>()
 
 let isGeneratingForever = false
-let generateBtn = O.none as O.Option<HTMLElement>
+let subscription: Subscription | null = null
 let foreverBtn = O.none as O.Option<HTMLElement>
 
 const getMainWindow = (): O.Option<Element> => {
-    const els = document.getElementsByTagName(MAIN_WINDOW_CLASSNAME)
+    const els = document.getElementsByClassName(MAIN_WINDOW_CLASSNAME)
     if (els.length == 0) {
         return O.none
     }
@@ -73,8 +73,27 @@ const copyStyle = (src: HTMLElement, dst: HTMLElement) => {
 const appendGenerateForeverButton = (generateBtn: HTMLElement): O.Option<HTMLElement> => {
     const foreverBtn = document.createElement(generateBtn.tagName)
     foreverBtn.innerText = "Generate Forever"
-    copyStyle(generateBtn, foreverBtn)
-    foreverBtn.style.marginTop = "10px"
+    foreverBtn.style.cssText = `
+    display: flex;
+    flex-direction: row;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: justify;
+    justify-content: space-between;
+    background-color: rgb(245, 243, 194);
+    color: rgb(26, 28, 46);
+    font-size: 0.875rem;
+    height: 44px;
+    border-radius: 3px;
+    overflow: hidden;
+    cursor: pointer;
+    font-weight: 700;
+    transition: color 100ms ease 0s, background-color 100ms ease 0s, transform 150ms ease 0s;
+    padding: 10px 10px 10px 20px;
+    gap: 20px;
+    margin-top: 10px;
+    width: 100%;
+    `
     if (generateBtn.parentElement == null) {
         return O.none
     }
@@ -101,12 +120,12 @@ const pictureAttrObsCallback = (muts: MutationRecord[], obs: MutationObserver) =
 
 
 const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: MutationObserver) => {
-    console.log(muts, obs)
     for (const rec of muts) {
         for (const added of rec.addedNodes) {
             if (added instanceof Element) {
                 added as Element
-                if (added.className == PICTURE_CLASSNAME) {
+                if (added.className.includes(PICTURE_CLASSNAME)) {
+                    console.log("picture frame", added)
                     const attrObs = new MutationObserver(pictureAttrObsCallback)
                     attrObs.observe(added, {
                         subtree: true,
@@ -121,6 +140,8 @@ const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mu
                     generatedSubject.next(ev)
                     obs.disconnect()
                 }
+            } else {
+                console.error("added is not Element", added)
             }
         }
     }
@@ -145,7 +166,7 @@ const getSaveBtn = (): O.Option<Element> => {
 const onPicture = (ev: GeneratedEvent) => {
     const el = ev.element
     const src = el.getAttribute("src")
-    console.log("onPicture", src)
+    console.log("onPicture", ev)
     const saveBtn = getSaveBtn()
     if (O.isNone(saveBtn)) {
         console.error("save button not found")
@@ -166,48 +187,57 @@ const onPicture = (ev: GeneratedEvent) => {
 }
 
 
-const init = () => {
+const init = (): boolean => {
     const main = getMainWindow()
     if (O.isNone(main)) {
         console.error("main window not found")
-        return
+        return false
     }
     const mainWindowObs = new MutationObserver(mainWindowObsCallback)
     mainWindowObs.observe(main.value, {
         childList: true,
         subtree: true
     })
-    generateBtn = getGenerateButton() as O.Option<HTMLElement>
+    const generateBtn = getGenerateButton() as O.Option<HTMLElement>
     if (O.isNone(generateBtn)) {
         console.error("generate button not found")
-        return
+        return false
     }
     foreverBtn = appendGenerateForeverButton(generateBtn.value) as O.Option<HTMLElement>
     if (O.isNone(foreverBtn)) {
         console.error("failed to append forever button")
-        return
+        return false
     }
     foreverBtn.value.onclick = () => {
         if (O.isNone(foreverBtn)) {
             console.log("forever button not found")
-            return
+            return false
         }
         if (isGeneratingForever) {
             isGeneratingForever = false
             foreverBtn.value.innerText = "Generate Forever"
             foreverBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
-            generatedSubject.unsubscribe()
+            if (subscription != null) {
+                subscription.unsubscribe()
+            } else {
+                console.error("subscription is null")
+            }
         } else {
             isGeneratingForever = true
-            foreverBtn.value.innerText = "Stop Generating"
+            foreverBtn.value.innerText = "Stop Generating Forever"
             foreverBtn.value.style.backgroundColor = BTN_STOP_COLOR
-            generatedSubject.subscribe(onPicture)
+            subscription = generatedSubject.subscribe(onPicture)
         }
     }
+    return true
 }
 
 const ____ = 0;
 (() => {
     'use strict'
-    init()
+    const handle = setInterval(() => {
+        if (init()) {
+            clearInterval(handle)
+        }
+    }, 1000)
 })()

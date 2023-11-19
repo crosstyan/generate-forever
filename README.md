@@ -1,1 +1,1 @@
-https://github.com/evanw/esbuild/blob/03a33e6e007467d99989ecf82fad61bd928a71aa/CHANGELOG.md#0717
+- [Why does `@require` always give me the error "couldn't load @require from forbidden URL" for local scripts on Greasemonkey/Tampermonkey](https://stackoverflow.com/questions/68205265/why-does-require-always-give-me-the-error-couldnt-load-require-from-forbidde)
