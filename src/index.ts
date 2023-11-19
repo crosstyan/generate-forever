@@ -43,7 +43,6 @@ const getMainWindow = (): O.Option<Element> => {
 }
 
 // https://stackoverflow.com/questions/53047318/performant-way-to-find-out-if-an-element-or-any-of-its-ancestor-elements-has-dis#:~:text=The%20easiest%20way%20to%20see,offsetParent%20.&text=This%20code%20converts%20el.,element%20is%20showing%20or%20not.
-// won't work
 const notDisplayNone = (element: Element) => {
     // Start with the element itself and move up the DOM tree
     for (let el: Element | ParentNode | Document = element; el && el !== document; el = el.parentNode) {
@@ -64,9 +63,6 @@ const getGenerateButtons = (): HTMLElement[] => {
     const els = document.getElementsByTagName("button")
     const filtered = Array.from(els).filter((el) => {
         const isGen = el.outerHTML.includes(GenerateEn) || el.outerHTML.includes(GenerateJp)
-        // always return the first one
-        // it's kind of weird that there are two buttons with the same text
-        // but one is not visible...
         return isGen
     })
     return filtered
@@ -81,7 +77,7 @@ const copyStyle = (src: HTMLElement, dst: HTMLElement) => {
 
 const appendGenerateForeverButton = (generateBtn: HTMLElement): O.Option<HTMLElement> => {
     const foreverBtn = document.createElement(generateBtn.tagName)
-    foreverBtn.innerText = "Generate Forever"
+    foreverBtn.innerText = Text.generateForeverMode
     foreverBtn.style.cssText = `
     display: flex;
     flex-direction: row;
