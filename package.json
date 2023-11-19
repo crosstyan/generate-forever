@@ -11,7 +11,8 @@
     "watch:esbuild": "esbuild ./build/src/index.js --bundle --minify --outdir=./build/dist --watch",
     "build:esbuild-sourcemap": "esbuild ./build/src/index.js --bundle --sourcemap --minify --outdir=./build/dist --sourcemap=inline",
     "watch:esbuild-sourcemap": "esbuild ./build/src/index.js --bundle --sourcemap --minify --outdir=./build/dist --sourcemap=inline --watch",
-    "build": "npm-run-all build:tsc build:esbuild"
+    "concat": "node build/scripts/concat.js",
+    "build": "npm-run-all build:tsc build:esbuild concat"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.201",
@@ -28,6 +29,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/node": "^20.9.2",
+    "app-root-path": "^3.1.0",
     "fp-ts": "^2.16.1",
     "rxjs": "^7.8.1"
   }

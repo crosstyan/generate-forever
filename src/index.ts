@@ -1,7 +1,13 @@
 import * as O from "fp-ts/Option"
-import { cons } from "fp-ts/lib/ReadonlyNonEmptyArray"
+import { tell } from "fp-ts/lib/Writer"
 import { Subject, Subscription } from "rxjs"
 
+const GenerateEn = "Generate"
+const GenerateJp = "生成"
+
+// bQmQwp NovelAI dark
+// lotOmo NovelAI light
+// kMUUYF NovelAI dark legacy
 const GENERATE_BUTTON_CLASSNAME = "kMUUYF"
 // observe this at start
 const MAIN_WINDOW_CLASSNAME = "gStylA"
@@ -16,6 +22,11 @@ const DATA_PROJECTION_ATTRIBUTE_VALUE = 26
 const DELAY_RANGE_MS: [number, number] = [1000, 3000]
 const BTN_NORMAL_COLOR = "rgb(245, 243, 194)"
 const BTN_STOP_COLOR = "rgb(245, 194, 194)"
+
+const Text = {
+    generateForeverMode: "Generate Forever Mode",
+    stopGenerateForeverMode: "Stop Generate Forever Mode"
+}
 
 interface GeneratedEvent {
     observer: MutationObserver
@@ -38,7 +49,8 @@ const getMainWindow = (): O.Option<Element> => {
 }
 
 // https://stackoverflow.com/questions/53047318/performant-way-to-find-out-if-an-element-or-any-of-its-ancestor-elements-has-dis#:~:text=The%20easiest%20way%20to%20see,offsetParent%20.&text=This%20code%20converts%20el.,element%20is%20showing%20or%20not.
-function notDisplayNone(element: Element) {
+// won't work
+const notDisplayNone = (element: Element) => {
     // Start with the element itself and move up the DOM tree
     for (let el: Element | ParentNode | Document = element; el && el !== document; el = el.parentNode) {
         if (el instanceof Element) {
@@ -53,10 +65,15 @@ function notDisplayNone(element: Element) {
     return true
 }
 
+// https://stackoverflow.com/questions/10767701/javascript-css-get-element-by-style-attribute
 const getGenerateButton = (): O.Option<Element> => {
-    const els = document.getElementsByClassName(GENERATE_BUTTON_CLASSNAME)
+    const els = document.getElementsByTagName("button")
     for (const el of els) {
-        if (notDisplayNone(el)) {
+        const isGen = el.outerHTML.includes(GenerateEn) || el.outerHTML.includes(GenerateJp)
+        // always return the first one
+        // it's kind of weird that there are two buttons with the same text
+        // but one is not visible...
+        if (isGen) {
             return O.some(el)
         }
     }
@@ -80,7 +97,7 @@ const appendGenerateForeverButton = (generateBtn: HTMLElement): O.Option<HTMLEle
     align-items: center;
     -webkit-box-pack: justify;
     justify-content: space-between;
-    background-color: rgb(245, 243, 194);
+    background-color: ${BTN_NORMAL_COLOR};
     color: rgb(26, 28, 46);
     font-size: 0.875rem;
     height: 44px;
@@ -209,8 +226,9 @@ const init = (): boolean => {
             return false
         }
         if (isGeneratingForever) {
+            console.log("exit forever mode")
             isGeneratingForever = false
-            foreverBtn.value.innerText = "Generate Forever Mode"
+            foreverBtn.value.innerText = Text.generateForeverMode
             foreverBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
             if (subscription != null) {
                 subscription.unsubscribe()
@@ -218,8 +236,9 @@ const init = (): boolean => {
                 console.error("subscription is null")
             }
         } else {
+            console.log("enter forever mode")
             isGeneratingForever = true
-            foreverBtn.value.innerText = "Stop Generating Forever Mode"
+            foreverBtn.value.innerText = Text.stopGenerateForeverMode
             foreverBtn.value.style.backgroundColor = BTN_STOP_COLOR
             subscription = generatedSubject.subscribe(onPicture)
         }
