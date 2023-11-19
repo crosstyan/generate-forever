@@ -5,22 +5,12 @@ import { Subject, Subscription } from "rxjs"
 const GenerateEn = "Generate"
 const GenerateJp = "生成"
 
-// bQmQwp NovelAI dark
-// lotOmo NovelAI light
-// kMUUYF NovelAI dark legacy
-// theme dependent
-const GENERATE_BUTTON_CLASSNAME = "kMUUYF"
 // not theme dependent
 // observe this at start
 const MAIN_WINDOW_CLASSNAME = "gStylA"
-// also theme dependent, avoid using this
+// not theme dependent
 // observe the attributions changes of this
-const PICTURE_CLASSNAME = "lcxhIe"
-const BOTTOM_TOOLBAR_CLASSNAME = "bSBA-Dm"
-const SMALL_ICON_CLASSNAME = "hPQOUn"
 const SAVE_BUTTON_CLASSNAME = "hpVEuL"
-const DATA_PROJECTION_ATTRIBUTE_NAME = "data-projection-id"
-const DATA_PROJECTION_ATTRIBUTE_VALUE = 26
 
 const DELAY_RANGE_MS: [number, number] = [1000, 3000]
 const BTN_NORMAL_COLOR = "rgb(245, 243, 194)"
