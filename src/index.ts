@@ -204,7 +204,6 @@ const init = () => {
             generatedSubject.subscribe(onPicture)
         }
     }
-
 }
 
 const ____ = 0;
