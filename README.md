@@ -32,7 +32,7 @@ BUILT_FILE C:\Users\cross\Desktop\code\generate-forever\build\dist\index.js
 OUT_FILE C:\Users\cross\Desktop\code\generate-forever\build\dist\generate_forever.user.js
 ```
 
-install `generate_forever.user.js` to Tampermonkey/Greasemonkey
+install `generate_forever.user.js` to [Tampermonkey](https://www.tampermonkey.net/)/[Greasemonkey](https://en.wikipedia.org/wiki/Greasemonkey)
 
 ## See also
 
