@@ -7,8 +7,10 @@
     "build:tsc": "tsc -p .",
     "watch:tsc": "tsc -p . -w",
     "watch:all": "concurrently \"npm:watch:tsc\" \"npm:watch:esbuild\"",
-    "build:esbuild": "esbuild ./build/src/index.js --bundle --sourcemap --minify --outdir=./build/dist --sourcemap=inline",
-    "watch:esbuild": "esbuild ./build/src/index.js --bundle --sourcemap --minify --outdir=./build/dist --sourcemap=inline --watch",
+    "build:esbuild": "esbuild ./build/src/index.js --bundle --minify --outdir=./build/dist",
+    "watch:esbuild": "esbuild ./build/src/index.js --bundle --minify --outdir=./build/dist --watch",
+    "build:esbuild-sourcemap": "esbuild ./build/src/index.js --bundle --sourcemap --minify --outdir=./build/dist --sourcemap=inline",
+    "watch:esbuild-sourcemap": "esbuild ./build/src/index.js --bundle --sourcemap --minify --outdir=./build/dist --sourcemap=inline --watch",
     "build": "npm-run-all build:tsc build:esbuild"
   },
   "devDependencies": {
