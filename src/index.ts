@@ -150,17 +150,10 @@ const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mu
 const getSaveBtn = (): O.Option<Element> => {
     const els = document.getElementsByClassName(SAVE_BUTTON_CLASSNAME)
     if (els.length == 0) {
+        console.error("save button not found")
         return O.none
     }
-    const el = els[0]
-    for (let ele = el; ele != null; ele = ele.parentElement) {
-        if (ele instanceof HTMLElement) {
-            if (ele.getAttribute(DATA_PROJECTION_ATTRIBUTE_NAME) == DATA_PROJECTION_ATTRIBUTE_VALUE.toString()) {
-                return O.some(ele)
-            }
-        }
-    }
-    return O.none
+    return O.some(els[0])
 }
 
 const onPicture = (ev: GeneratedEvent) => {
@@ -172,6 +165,7 @@ const onPicture = (ev: GeneratedEvent) => {
         console.error("save button not found")
         return
     }
+    console.log("click save button");
     (saveBtn.value as HTMLElement).click()
     const generateBtn = getGenerateButton()
     if (O.isNone(generateBtn)) {
@@ -182,6 +176,7 @@ const onPicture = (ev: GeneratedEvent) => {
     const delay = Math.floor(Math.random() * (max - min)) + min
     console.log("delay", delay)
     setTimeout(() => {
+        console.log("click generate button");
         (generateBtn.value as HTMLElement).click()
     }, delay)
 }
@@ -215,7 +210,7 @@ const init = (): boolean => {
         }
         if (isGeneratingForever) {
             isGeneratingForever = false
-            foreverBtn.value.innerText = "Generate Forever"
+            foreverBtn.value.innerText = "Generate Forever Mode"
             foreverBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
             if (subscription != null) {
                 subscription.unsubscribe()
@@ -224,7 +219,7 @@ const init = (): boolean => {
             }
         } else {
             isGeneratingForever = true
-            foreverBtn.value.innerText = "Stop Generating Forever"
+            foreverBtn.value.innerText = "Stop Generating Forever Mode"
             foreverBtn.value.style.backgroundColor = BTN_STOP_COLOR
             subscription = generatedSubject.subscribe(onPicture)
         }
