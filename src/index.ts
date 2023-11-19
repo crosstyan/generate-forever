@@ -8,9 +8,12 @@ const GenerateJp = "生成"
 // bQmQwp NovelAI dark
 // lotOmo NovelAI light
 // kMUUYF NovelAI dark legacy
+// theme dependent
 const GENERATE_BUTTON_CLASSNAME = "kMUUYF"
+// not theme dependent
 // observe this at start
 const MAIN_WINDOW_CLASSNAME = "gStylA"
+// also theme dependent, avoid using this
 // observe the attributions changes of this
 const PICTURE_CLASSNAME = "lcxhIe"
 const BOTTOM_TOOLBAR_CLASSNAME = "bSBA-Dm"
@@ -37,6 +40,7 @@ interface GeneratedEvent {
 const generatedSubject = new Subject<GeneratedEvent>()
 
 let isGeneratingForever = false
+let generateBtns = [] as HTMLElement[]
 let subscription: Subscription | null = null
 let foreverBtn = O.none as O.Option<HTMLElement>
 
@@ -66,18 +70,16 @@ const notDisplayNone = (element: Element) => {
 }
 
 // https://stackoverflow.com/questions/10767701/javascript-css-get-element-by-style-attribute
-const getGenerateButton = (): O.Option<Element> => {
+const getGenerateButtons = (): HTMLElement[] => {
     const els = document.getElementsByTagName("button")
-    for (const el of els) {
+    const filtered = Array.from(els).filter((el) => {
         const isGen = el.outerHTML.includes(GenerateEn) || el.outerHTML.includes(GenerateJp)
         // always return the first one
         // it's kind of weird that there are two buttons with the same text
         // but one is not visible...
-        if (isGen) {
-            return O.some(el)
-        }
-    }
-    return O.none
+        return isGen
+    })
+    return filtered
 }
 
 const copyStyle = (src: HTMLElement, dst: HTMLElement) => {
@@ -141,7 +143,8 @@ const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mu
         for (const added of rec.addedNodes) {
             if (added instanceof Element) {
                 added as Element
-                if (added.className.includes(PICTURE_CLASSNAME)) {
+                const eles = added.getElementsByTagName("img")
+                if (eles.length != 0) {
                     console.log("picture frame", added)
                     const attrObs = new MutationObserver(pictureAttrObsCallback)
                     attrObs.observe(added, {
@@ -156,6 +159,8 @@ const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mu
                     }
                     generatedSubject.next(ev)
                     obs.disconnect()
+                } else {
+                    console.warn("not picture frame", added)
                 }
             } else {
                 console.error("added is not Element", added)
@@ -184,17 +189,15 @@ const onPicture = (ev: GeneratedEvent) => {
     }
     console.log("click save button");
     (saveBtn.value as HTMLElement).click()
-    const generateBtn = getGenerateButton()
-    if (O.isNone(generateBtn)) {
-        console.error("generate button not found")
-        return
+    if (generateBtns.length == 0) {
+        generateBtns = getGenerateButtons()
     }
     const [min, max] = DELAY_RANGE_MS
     const delay = Math.floor(Math.random() * (max - min)) + min
     console.log("delay", delay)
     setTimeout(() => {
-        console.log("click generate button");
-        (generateBtn.value as HTMLElement).click()
+        console.log("click generate button")
+        generateBtns[0].click()
     }, delay)
 }
 
@@ -210,12 +213,13 @@ const init = (): boolean => {
         childList: true,
         subtree: true
     })
-    const generateBtn = getGenerateButton() as O.Option<HTMLElement>
-    if (O.isNone(generateBtn)) {
+    generateBtns = getGenerateButtons()
+    if (generateBtns.length == 0) {
         console.error("generate button not found")
         return false
     }
-    foreverBtn = appendGenerateForeverButton(generateBtn.value) as O.Option<HTMLElement>
+    console.log("generate buttons", generateBtns)
+    foreverBtn = appendGenerateForeverButton(generateBtns[0])
     if (O.isNone(foreverBtn)) {
         console.error("failed to append forever button")
         return false
