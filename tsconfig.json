@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "module": "NodeNext",
+    "outDir": "build",
+    "baseUrl": ".",
+    "allowJs": true,
+  },
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
+}

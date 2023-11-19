@@ -1,0 +1,31 @@
+{
+  "name": "generate_forever",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build:tsc": "tsc -p .",
+    "watch:tsc": "tsc -p . -w",
+    "watch:all": "concurrently \"npm:watch:tsc\" \"npm:watch:esbuild\"",
+    "build:esbuild": "esbuild ./build/index.js --bundle --sourcemap --outdir=./build/dist --sourcemap=inline",
+    "watch:esbuild": "esbuild ./build/index.js --bundle --sourcemap --outdir=./build/dist --sourcemap=inline --watch"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.201",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/parser": "^6.11.0",
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.19.6",
+    "eslint": "^8.54.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fp-ts": "^2.16.1",
+    "rxjs": "^7.8.1"
+  }
+}
