@@ -9,7 +9,6 @@ const GenerateJp = "生成"
 // observe this at start
 const MAIN_WINDOW_CLASSNAME = "gStylA"
 // not theme dependent
-// observe the attributions changes of this
 const SAVE_BUTTON_CLASSNAME = "hpVEuL"
 
 const DELAY_RANGE_MS: [number, number] = [1000, 3000]
