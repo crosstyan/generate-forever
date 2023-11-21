@@ -3,7 +3,10 @@
 // @namespace    http://tampermonkey.net/
 // @version      0.1.1
 // @description  create a generate forever button
-// @author       Crosstyan
+// @author       crosstyan
+// @copyright    2023+, crosstyan (https://github.com/crosstyan)
+// @homepageURL  https://github.com/crosstyan/generate-forever
 // @match        *://novelai.net/image*
+// @license      WTFPL; http://www.wtfpl.net
 // @grant        none
 // ==/UserScript==

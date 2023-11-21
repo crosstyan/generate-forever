@@ -2,6 +2,11 @@ import * as O from "fp-ts/Option"
 import { tell } from "fp-ts/lib/Writer"
 import { Subject, Subscription } from "rxjs"
 
+/**
+ * Also refer to:
+ * https://sourceforge.net/p/greasemonkey/wiki/Metadata_Block/#homepageurl
+ */
+
 const GenerateEn = "Generate"
 const GenerateJp = "生成"
 
