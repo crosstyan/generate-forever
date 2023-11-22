@@ -237,10 +237,7 @@ const init = (): boolean => {
     foreverBtn = O.some(appendGenerateForeverButton(customArea.value))
     assertSome(foreverBtn)
     foreverBtn.value.onclick = () => {
-        if (O.isNone(foreverBtn)) {
-            console.log("forever button not found")
-            return
-        }
+        assertSome(foreverBtn)
         if (isGeneratingForever) {
             console.log("exit forever mode")
             isGeneratingForever = false
@@ -263,10 +260,7 @@ const init = (): boolean => {
     autoSaveBtn = O.some(appendAutoSaveButton(customArea.value)) 
     assertSome(autoSaveBtn)
     autoSaveBtn.value.onclick = () => {
-        if (O.isNone(autoSaveBtn)) {
-            console.log("auto save button not found")
-            return
-        }
+        assertSome(autoSaveBtn)
         if (isAutoSave) {
             isAutoSave = false
             autoSaveBtn.value.innerText = Text.autoSaveDisabled
