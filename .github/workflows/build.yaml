@@ -1,11 +1,10 @@
 name: Node.js CI
 
 on:
+  push:
+    branches: ["main"]
   pull_request:
     branches: ["main"]
-
-env:
-  BUILD_TYPE: Release
 
 jobs:
   build:
@@ -25,4 +24,4 @@ jobs:
         with:
           name: script
           path: |
-            build/dist/generate_forever.usr.js
+            build/dist/generate_forever.user.js
