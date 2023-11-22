@@ -22,10 +22,10 @@ const BTN_NORMAL_COLOR = "rgb(245, 243, 194)"
 const BTN_STOP_COLOR = "rgb(245, 194, 194)"
 
 const Text = {
-    generateForeverMode: "Generate Forever Mode",
-    stopGenerateForeverMode: "Stop Generate Forever Mode",
-    autoSaveEnabled: "Auto Save Enabled",
-    autoSaveDisabled: "Auto Save Disabled",
+    generateForeverMode: "Once",
+    stopGenerateForeverMode: "Generate Forever",
+    autoSaveEnabled: "Auto Save",
+    autoSaveDisabled: "Manual Save",
 }
 
 const btnStyle = `
