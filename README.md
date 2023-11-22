@@ -2,6 +2,8 @@
 
 a userscript to generate forever for a novel site
 
+Download latest artifact from [Actions](https://github.com/crosstyan/generate-forever/actions)
+
 ```bash
 pnpm install
 pnpm run build
