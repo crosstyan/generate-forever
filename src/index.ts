@@ -7,8 +7,8 @@ import { Subject, Subscription } from "rxjs"
  * https://sourceforge.net/p/greasemonkey/wiki/Metadata_Block/#homepageurl
  */
 
-const GenerateEn = "Generate"
-const GenerateJp = "生成"
+const GenerateEN = "Generate"
+const GenerateJP = "生成"
 
 // not theme dependent
 // observe this at start
@@ -22,67 +22,12 @@ const BTN_STOP_COLOR = "rgb(245, 194, 194)"
 
 const Text = {
     generateForeverMode: "Generate Forever Mode",
-    stopGenerateForeverMode: "Stop Generate Forever Mode"
+    stopGenerateForeverMode: "Stop Generate Forever Mode",
+    autoSaveEnabled: "Auto Save Enabled",
+    autoSaveDisabled: "Auto Save Disabled",
 }
 
-interface GeneratedEvent {
-    observer: MutationObserver
-    time: Date
-    element: Element
-}
-
-const generatedSubject = new Subject<GeneratedEvent>()
-
-let isGeneratingForever = false
-let generateBtns = [] as HTMLElement[]
-let subscription: Subscription | null = null
-let foreverBtn = O.none as O.Option<HTMLElement>
-
-const getMainWindow = (): O.Option<Element> => {
-    const els = document.getElementsByClassName(MAIN_WINDOW_CLASSNAME)
-    if (els.length == 0) {
-        return O.none
-    }
-    return O.some(els[0])
-}
-
-// https://stackoverflow.com/questions/53047318/performant-way-to-find-out-if-an-element-or-any-of-its-ancestor-elements-has-dis#:~:text=The%20easiest%20way%20to%20see,offsetParent%20.&text=This%20code%20converts%20el.,element%20is%20showing%20or%20not.
-const notDisplayNone = (element: Element) => {
-    // Start with the element itself and move up the DOM tree
-    for (let el: Element | ParentNode | Document = element; el && el !== document; el = el.parentNode) {
-        if (el instanceof Element) {
-            if (window.getComputedStyle(el).display === "none") {
-                return false
-            }
-        } else {
-            return true
-        }
-    }
-    // Neither element itself nor any parents have display 'none', so return true
-    return true
-}
-
-// https://stackoverflow.com/questions/10767701/javascript-css-get-element-by-style-attribute
-const getGenerateButtons = (): HTMLElement[] => {
-    const els = document.getElementsByTagName("button")
-    const filtered = Array.from(els).filter((el) => {
-        const isGen = el.outerHTML.includes(GenerateEn) || el.outerHTML.includes(GenerateJp)
-        return isGen
-    })
-    return filtered
-}
-
-const copyStyle = (src: HTMLElement, dst: HTMLElement) => {
-    const style = window.getComputedStyle(src)
-    for (const key of style) {
-        dst.style.setProperty(key, style.getPropertyValue(key))
-    }
-}
-
-const appendGenerateForeverButton = (generateBtn: HTMLElement): O.Option<HTMLElement> => {
-    const foreverBtn = document.createElement(generateBtn.tagName)
-    foreverBtn.innerText = Text.generateForeverMode
-    foreverBtn.style.cssText = `
+const btnStyle = `
     display: flex;
     flex-direction: row;
     -webkit-box-align: center;
@@ -103,11 +48,60 @@ const appendGenerateForeverButton = (generateBtn: HTMLElement): O.Option<HTMLEle
     margin-top: 10px;
     width: 100%;
     `
+
+interface GeneratedEvent {
+    observer: MutationObserver
+    time: Date
+    element: Element
+}
+
+const generatedSubject = new Subject<GeneratedEvent>()
+
+let isGeneratingForever = false
+let isAutoSave = true
+let generateBtns = [] as HTMLElement[]
+let subscription: Subscription | null = null
+let foreverBtn = O.none as O.Option<HTMLElement>
+let autoSaveBtn = O.none as O.Option<HTMLElement>
+
+const getMainWindow = (): O.Option<Element> => {
+    const els = document.getElementsByClassName(MAIN_WINDOW_CLASSNAME)
+    if (els.length == 0) {
+        return O.none
+    }
+    return O.some(els[0])
+}
+
+// https://stackoverflow.com/questions/10767701/javascript-css-get-element-by-style-attribute
+const getGenerateButtons = (): HTMLElement[] => {
+    const els = document.getElementsByTagName("button")
+    const filtered = Array.from(els).filter((el) => {
+        const isGen = el.outerHTML.includes(GenerateEN) || el.outerHTML.includes(GenerateJP)
+        return isGen
+    })
+    return filtered
+}
+
+const appendGenerateForeverButton = (generateBtn: HTMLElement): O.Option<HTMLElement> => {
+    const foreverBtn = document.createElement(generateBtn.tagName)
+    foreverBtn.innerText = Text.generateForeverMode
+    foreverBtn.style.cssText = btnStyle
     if (generateBtn.parentElement == null) {
         return O.none
     }
     generateBtn.parentElement.appendChild(foreverBtn)
     return O.some(foreverBtn)
+}
+
+const appendAutoSaveButton = (lastElem: HTMLElement): O.Option<HTMLElement> => {
+    const saveBtn = document.createElement(lastElem.tagName)
+    saveBtn.innerText = Text.autoSaveEnabled
+    saveBtn.style.cssText = btnStyle
+    if (lastElem.parentElement == null) {
+        return O.none
+    }
+    lastElem.parentElement.appendChild(saveBtn)
+    return O.some(saveBtn)
 }
 
 const pictureAttrObsCallback = (muts: MutationRecord[], obs: MutationObserver) => {
@@ -172,13 +166,15 @@ const onPicture = (ev: GeneratedEvent) => {
     const el = ev.element
     const src = el.getAttribute("src")
     console.log("onPicture", ev)
-    const saveBtn = getSaveBtn()
-    if (O.isNone(saveBtn)) {
-        console.error("save button not found")
-        return
+    if (isAutoSave) {
+        const saveBtn = getSaveBtn()
+        if (O.isNone(saveBtn)) {
+            console.error("save button not found")
+            return
+        }
+        console.log("click save button");
+        (saveBtn.value as HTMLElement).click()
     }
-    console.log("click save button");
-    (saveBtn.value as HTMLElement).click()
     if (generateBtns.length == 0) {
         generateBtns = getGenerateButtons()
     }
@@ -217,7 +213,7 @@ const init = (): boolean => {
     foreverBtn.value.onclick = () => {
         if (O.isNone(foreverBtn)) {
             console.log("forever button not found")
-            return false
+            return
         }
         if (isGeneratingForever) {
             console.log("exit forever mode")
@@ -236,6 +232,26 @@ const init = (): boolean => {
             foreverBtn.value.innerText = Text.stopGenerateForeverMode
             foreverBtn.value.style.backgroundColor = BTN_STOP_COLOR
             subscription = generatedSubject.subscribe(onPicture)
+        }
+    }
+    autoSaveBtn = appendAutoSaveButton(generateBtns[0])
+    if (O.isNone(autoSaveBtn)) {
+        console.error("failed to append auto save button")
+        return false
+    }
+    autoSaveBtn.value.onclick = () => {
+        if (O.isNone(autoSaveBtn)) {
+            console.log("auto save button not found")
+            return
+        }
+        if (isAutoSave) {
+            isAutoSave = false
+            autoSaveBtn.value.innerText = Text.autoSaveDisabled
+            autoSaveBtn.value.style.backgroundColor = BTN_STOP_COLOR
+        } else {
+            isAutoSave = true
+            autoSaveBtn.value.innerText = Text.autoSaveEnabled
+            autoSaveBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
         }
     }
     return true
