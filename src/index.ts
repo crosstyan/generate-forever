@@ -1,4 +1,5 @@
 import * as O from "fp-ts/Option"
+import { Option, None, Some, match } from "fp-ts/Option"
 import { tell } from "fp-ts/lib/Writer"
 import { Subject, Subscription } from "rxjs"
 
@@ -55,6 +56,25 @@ interface GeneratedEvent {
     element: Element
 }
 
+/**
+ * Asserts that the given option is Some
+ */
+function assertSome <T>(o: O.Option<T>): asserts o is O.Some<T> {
+    if (O.isNone(o)) {
+        throw new Error("assertSome failed")
+    }
+}
+
+/**
+ * Unwraps the given option.
+ */
+const unwrap = <T>(o: O.Option<T>): T => {
+    if (O.isNone(o)) {
+        throw new Error("unwrap failed")
+    }
+    return o.value
+}
+
 const generatedSubject = new Subject<GeneratedEvent>()
 
 let isGeneratingForever = false
@@ -82,26 +102,30 @@ const getGenerateButtons = (): HTMLElement[] => {
     return filtered
 }
 
-const appendGenerateForeverButton = (generateBtn: HTMLElement): O.Option<HTMLElement> => {
-    const foreverBtn = document.createElement(generateBtn.tagName)
-    foreverBtn.innerText = Text.generateForeverMode
-    foreverBtn.style.cssText = btnStyle
+const appendCustomArea = (generateBtn: HTMLElement): Option<HTMLElement> => {
+    const customArea = document.createElement("div")
+    customArea.style.display = "flex"
     if (generateBtn.parentElement == null) {
         return O.none
     }
-    generateBtn.parentElement.appendChild(foreverBtn)
-    return O.some(foreverBtn)
+    generateBtn.parentElement.appendChild(customArea)
+    return O.some(customArea)
 }
 
-const appendAutoSaveButton = (lastElem: HTMLElement): O.Option<HTMLElement> => {
-    const saveBtn = document.createElement(lastElem.tagName)
+const appendGenerateForeverButton = (customArea: HTMLElement): HTMLElement => {
+    const foreverBtn = document.createElement("button")
+    foreverBtn.innerText = Text.generateForeverMode
+    foreverBtn.style.cssText = btnStyle
+    customArea.appendChild(foreverBtn)
+    return foreverBtn
+}
+
+const appendAutoSaveButton = (customArea: HTMLElement): HTMLElement => {
+    const saveBtn = document.createElement("button")
     saveBtn.innerText = Text.autoSaveEnabled
     saveBtn.style.cssText = btnStyle
-    if (lastElem.parentElement == null) {
-        return O.none
-    }
-    lastElem.parentElement.appendChild(saveBtn)
-    return O.some(saveBtn)
+    customArea.appendChild(saveBtn)
+    return saveBtn
 }
 
 const pictureAttrObsCallback = (muts: MutationRecord[], obs: MutationObserver) => {
@@ -205,11 +229,13 @@ const init = (): boolean => {
         return false
     }
     console.log("generate buttons", generateBtns)
-    foreverBtn = appendGenerateForeverButton(generateBtns[0])
-    if (O.isNone(foreverBtn)) {
-        console.error("failed to append forever button")
+    const customArea = appendCustomArea(generateBtns[0])
+    if (O.isNone(customArea)) {
+        console.error("failed to append custom area")
         return false
     }
+    foreverBtn = O.some(appendGenerateForeverButton(customArea.value))
+    assertSome(foreverBtn)
     foreverBtn.value.onclick = () => {
         if (O.isNone(foreverBtn)) {
             console.log("forever button not found")
@@ -234,11 +260,8 @@ const init = (): boolean => {
             subscription = generatedSubject.subscribe(onPicture)
         }
     }
-    autoSaveBtn = appendAutoSaveButton(generateBtns[0])
-    if (O.isNone(autoSaveBtn)) {
-        console.error("failed to append auto save button")
-        return false
-    }
+    autoSaveBtn = O.some(appendAutoSaveButton(customArea.value)) 
+    assertSome(autoSaveBtn)
     autoSaveBtn.value.onclick = () => {
         if (O.isNone(autoSaveBtn)) {
             console.log("auto save button not found")
