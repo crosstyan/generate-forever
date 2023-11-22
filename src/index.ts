@@ -2,12 +2,17 @@ import * as O from "fp-ts/Option"
 import { tell } from "fp-ts/lib/Writer"
 import { Subject, Subscription } from "rxjs"
 
+/**
+ * Also refer to:
+ * https://sourceforge.net/p/greasemonkey/wiki/Metadata_Block/#homepageurl
+ */
+
 const GenerateEn = "Generate"
 const GenerateJp = "生成"
 
 // not theme dependent
 // observe this at start
-const MAIN_WINDOW_CLASSNAME = "gStylA"
+const MAIN_WINDOW_CLASSNAME = "ePFPNa"
 // not theme dependent
 const SAVE_BUTTON_CLASSNAME = "hpVEuL"
 
