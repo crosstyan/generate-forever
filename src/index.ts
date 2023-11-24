@@ -271,6 +271,26 @@ const init = (): boolean => {
             autoSaveBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
         }
     }
+    // you could call this function from the console
+    // without the need to reload the page
+    // https://developer.mozilla.org/en-US/docs/Web/Events/Creating_and_triggering_events
+    window.addEventListener("gen_4eva", (ev) => {
+        console.log("trigger init from message")
+        init()
+    })
+
+    /**
+     * to trigger init from the console
+     * 
+     * ```js
+     * const ev = new CustomEvent("generate_forever")
+     * window.dispatchEvent(ev)
+     * ```
+     * 
+     * when to use? when you find that the buttons are missing 
+     * (usually after inpaint)
+     */
+
     return true
 }
 
