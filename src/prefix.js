@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Generate Forever
 // @namespace    http://tampermonkey.net/
-// @version      0.2.0
+// @version      0.2.1
 // @description  create a generate forever button
 // @author       crosstyan
 // @copyright    2023+, crosstyan (https://github.com/crosstyan)

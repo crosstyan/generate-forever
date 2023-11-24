@@ -59,7 +59,7 @@ interface GeneratedEvent {
 /**
  * Asserts that the given option is Some
  */
-function assertSome <T>(o: O.Option<T>): asserts o is O.Some<T> {
+function assertSome<T>(o: O.Option<T>): asserts o is O.Some<T> {
     if (O.isNone(o)) {
         throw new Error("assertSome failed")
     }
@@ -83,6 +83,8 @@ let generateBtns = [] as HTMLElement[]
 let subscription: Subscription | null = null
 let foreverBtn = O.none as O.Option<HTMLElement>
 let autoSaveBtn = O.none as O.Option<HTMLElement>
+let attrObs = O.none as O.Option<MutationObserver>
+let imageWindowClassName = O.none as O.Option<string>
 
 const getMainWindow = (): O.Option<Element> => {
     const els = document.getElementsByClassName(MAIN_WINDOW_CLASSNAME)
@@ -114,16 +116,18 @@ const appendCustomArea = (generateBtn: HTMLElement): Option<HTMLElement> => {
 
 const appendGenerateForeverButton = (customArea: HTMLElement): HTMLElement => {
     const foreverBtn = document.createElement("button")
-    foreverBtn.innerText = Text.generateForeverMode
+    foreverBtn.innerText = isGeneratingForever ? Text.stopGenerateForeverMode : Text.generateForeverMode
     foreverBtn.style.cssText = btnStyle
+    foreverBtn.style.backgroundColor = isGeneratingForever ? BTN_STOP_COLOR : BTN_NORMAL_COLOR
     customArea.appendChild(foreverBtn)
     return foreverBtn
 }
 
 const appendAutoSaveButton = (customArea: HTMLElement): HTMLElement => {
     const saveBtn = document.createElement("button")
-    saveBtn.innerText = Text.autoSaveEnabled
+    saveBtn.innerText = isAutoSave ? Text.autoSaveEnabled : Text.autoSaveDisabled
     saveBtn.style.cssText = btnStyle
+    saveBtn.style.backgroundColor = isAutoSave ? BTN_NORMAL_COLOR : BTN_STOP_COLOR
     customArea.appendChild(saveBtn)
     return saveBtn
 }
@@ -153,16 +157,20 @@ const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mu
                 added as Element
                 const eles = added.getElementsByTagName("img")
                 if (eles.length != 0) {
+                    const classes = added.className
                     console.log("picture frame", added)
-                    const attrObs = new MutationObserver(pictureAttrObsCallback)
-                    attrObs.observe(added, {
+                    console.log("picture frame class", classes)
+                    imageWindowClassName = O.some(classes)
+                    const attrObserver = new MutationObserver(pictureAttrObsCallback)
+                    attrObs = O.some(attrObserver)
+                    attrObserver.observe(added, {
                         subtree: true,
                         childList: true,
                         attributes: true
                     })
                     const ev: GeneratedEvent = {
                         time: new Date(),
-                        observer: attrObs,
+                        observer: attrObserver,
                         element: added
                     }
                     generatedSubject.next(ev)
@@ -213,16 +221,46 @@ const onPicture = (ev: GeneratedEvent) => {
 
 
 const init = (): boolean => {
+    // reset all of the global variables
+    generateBtns = []
+    if (subscription != null) {
+        isGeneratingForever = false
+        subscription.unsubscribe()
+        subscription = null
+    }
+    foreverBtn = O.none
+    autoSaveBtn = O.none
+
     const main = getMainWindow()
     if (O.isNone(main)) {
         console.error("main window not found")
         return false
     }
-    const mainWindowObs = new MutationObserver(mainWindowObsCallback)
-    mainWindowObs.observe(main.value, {
-        childList: true,
-        subtree: true
-    })
+
+    if (O.isSome(attrObs)) {
+        attrObs.value.disconnect()
+        assertSome(imageWindowClassName)
+        const eles = document.getElementsByClassName(imageWindowClassName.value)
+        if (eles.length != 1) {
+            console.error("image parent not found or ambiguous")
+            return false
+        }
+        const added = eles[0]
+        const attrObserver = new MutationObserver(pictureAttrObsCallback)
+        attrObs = O.some(attrObserver)
+        attrObserver.observe(added, {
+            subtree: true,
+            childList: true,
+            attributes: true
+        })
+    } else {
+        const mainWindowObs = new MutationObserver(mainWindowObsCallback)
+        mainWindowObs.observe(main.value, {
+            childList: true,
+            subtree: true
+        })
+    }
+
     generateBtns = getGenerateButtons()
     if (generateBtns.length == 0) {
         console.error("generate button not found")
@@ -257,7 +295,7 @@ const init = (): boolean => {
             subscription = generatedSubject.subscribe(onPicture)
         }
     }
-    autoSaveBtn = O.some(appendAutoSaveButton(customArea.value)) 
+    autoSaveBtn = O.some(appendAutoSaveButton(customArea.value))
     assertSome(autoSaveBtn)
     autoSaveBtn.value.onclick = () => {
         assertSome(autoSaveBtn)
@@ -274,10 +312,13 @@ const init = (): boolean => {
     // you could call this function from the console
     // without the need to reload the page
     // https://developer.mozilla.org/en-US/docs/Web/Events/Creating_and_triggering_events
-    window.addEventListener("gen_4eva", (ev) => {
-        console.log("trigger init from message")
-        init()
-    })
+    if (O.isNone(attrObs)){
+        console.log("first start, listen to `gen_4eva` message")
+        window.addEventListener("gen_4eva", (ev) => {
+            console.log("trigger init from message")
+            init()
+        })
+    }
 
     /**
      * to trigger init from the console
