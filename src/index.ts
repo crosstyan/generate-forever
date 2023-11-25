@@ -324,8 +324,7 @@ const init = (): boolean => {
      * to trigger init from the console
      * 
      * ```js
-     * const ev = new CustomEvent("generate_forever")
-     * window.dispatchEvent(ev)
+     * window.dispatchEvent(new CustomEvent("gen_4eva"))
      * ```
      * 
      * when to use? when you find that the buttons are missing 
