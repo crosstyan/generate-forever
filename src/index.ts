@@ -13,7 +13,7 @@ const GenerateJP = "生成"
 
 // not theme dependent
 // observe this at start
-const MAIN_WINDOW_CLASSNAME = "ePFPNa"
+const MAIN_WINDOW_CLASSNAME = "bAPOJ"
 // not theme dependent
 const SAVE_BUTTON_CLASSNAME = "hpVEuL"
 
