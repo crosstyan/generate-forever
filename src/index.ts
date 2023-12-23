@@ -1,7 +1,6 @@
 import * as O from "fp-ts/Option"
 import { Option, None, Some, match } from "fp-ts/Option"
-import { tell } from "fp-ts/lib/Writer"
-import { Subject, Subscription } from "rxjs"
+import { Subject, Subscription, debounceTime } from "rxjs"
 
 /**
  * Also refer to:
@@ -16,6 +15,9 @@ const GenerateJP = "生成"
 const MAIN_WINDOW_CLASSNAME = "bAPOJ"
 // not theme dependent
 const SAVE_BUTTON_CLASSNAME = "hpVEuL"
+const TOASTIFY_CLASSNAME = "Toastify"
+const TOASTIFY_CONTAINER_CLASSNAME = "Toastify__toast-container"
+const DEBOUNCE_TIME_MS = 600
 
 const DELAY_RANGE_MS: [number, number] = [1000, 3000]
 const BTN_NORMAL_COLOR = "rgb(245, 243, 194)"
@@ -76,6 +78,8 @@ const unwrap = <T>(o: O.Option<T>): T => {
 }
 
 const generatedSubject = new Subject<GeneratedEvent>()
+const toastSubject = new Subject<GeneratedEvent>()
+const debounceToastObs = toastSubject.pipe(debounceTime(DEBOUNCE_TIME_MS))
 
 let isGeneratingForever = false
 let isAutoSave = true
@@ -84,6 +88,8 @@ let subscription: Subscription | null = null
 let foreverBtn = O.none as O.Option<HTMLElement>
 let autoSaveBtn = O.none as O.Option<HTMLElement>
 let attrObs = O.none as O.Option<MutationObserver>
+let toastObs = O.none as O.Option<MutationObserver>
+let toastSub: Subscription | null = null
 let imageWindowClassName = O.none as O.Option<string>
 
 const getMainWindow = (): O.Option<Element> => {
@@ -92,6 +98,10 @@ const getMainWindow = (): O.Option<Element> => {
         return O.none
     }
     return O.some(els[0])
+}
+
+const randomRange = (min: number, max: number): number => {
+    return Math.floor(Math.random() * (max - min)) + min
 }
 
 // https://stackoverflow.com/questions/10767701/javascript-css-get-element-by-style-attribute
@@ -180,6 +190,26 @@ const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mu
                 }
             } else {
                 console.error("added is not Element", added)
+            }
+        }
+    }
+}
+
+const toastObsCallback: MutationCallback = (muts: MutationRecord[], obs: MutationObserver) => {
+    for (const rec of muts) {
+        for (const added of rec.addedNodes) {
+            if (added instanceof Element) {
+                added as Element
+                const classes = added.className
+                if (classes.includes(TOASTIFY_CONTAINER_CLASSNAME)) {
+                    console.log("toastify container", added)
+                    const ev: GeneratedEvent = {
+                        time: new Date(),
+                        observer: obs,
+                        element: added
+                    }
+                    toastSubject.next(ev)
+                }
             }
         }
     }
@@ -309,10 +339,46 @@ const init = (): boolean => {
             autoSaveBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
         }
     }
+
+    const registerToastifySub = () => {
+        const toastifyEls = document.getElementsByClassName(TOASTIFY_CLASSNAME)
+        if (toastifyEls.length != 1) {
+            console.error("toastify not found or ambiguous")
+            return false
+        }
+        const toastifyEl = toastifyEls[0]
+        const toastObserver = new MutationObserver(toastObsCallback)
+        toastObs = O.some(toastObserver)
+        toastObserver.observe(toastifyEl, {
+            subtree: true,
+            childList: true,
+            attributes: true
+        })
+        toastSub = debounceToastObs.subscribe((ev) => {
+            if (isGeneratingForever) {
+                console.warn("toastify detected, might be an error; click generate button")
+                const delay = randomRange(200, 400)
+                setTimeout(() => {
+                    console.log("click generate button")
+                    generateBtns[0].click()
+                }, delay)
+            }
+        })
+    }
+
+    if (O.isSome(toastObs)) {
+        toastObs.value.disconnect()
+        toastSub?.unsubscribe()
+        toastSub = null
+        registerToastifySub()
+    } else {
+        registerToastifySub()
+    }
+
     // you could call this function from the console
     // without the need to reload the page
     // https://developer.mozilla.org/en-US/docs/Web/Events/Creating_and_triggering_events
-    if (O.isNone(attrObs)){
+    if (O.isNone(attrObs)) {
         console.log("first start, listen to `gen_4eva` message")
         window.addEventListener("gen_4eva", (ev) => {
             console.log("trigger init from message")
