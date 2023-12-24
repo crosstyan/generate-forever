@@ -12,7 +12,7 @@ const GenerateJP = "生成"
 
 // not theme dependent
 // observe this at start
-const MAIN_WINDOW_CLASSNAME = "bAPOJ"
+const MAIN_WINDOW_CLASSNAME = "efUDVw"
 // not theme dependent
 const SAVE_BUTTON_CLASSNAME = "hpVEuL"
 const TOASTIFY_CLASSNAME = "Toastify"
