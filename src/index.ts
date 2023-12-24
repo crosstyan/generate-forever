@@ -10,12 +10,10 @@ import { Subject, Subscription, debounceTime } from "rxjs"
 const GenerateEN = "Generate"
 const GenerateJP = "生成"
 
-// not theme dependent
 // observe this at start
-const MAIN_WINDOW_CLASSNAME = "efUDVw"
-// not theme dependent
-// xpath is one indexed
+// note that xpath is one indexed
 // (//*[@id='_next']/div)[2]/div[4]/div[2]/div[2]
+const MAIN_WINDOW_CLASSNAME = "efUDVw"
 const SAVE_BUTTON_CLASSNAME = "hpVEuL"
 const TOASTIFY_CLASSNAME = "Toastify"
 const TOASTIFY_CONTAINER_CLASSNAME = "Toastify__toast-container"
@@ -26,7 +24,6 @@ const BTN_NORMAL_COLOR = "rgb(245, 243, 194)"
 const BTN_STOP_COLOR = "rgb(245, 194, 194)"
 
 const getMain = () => {
-  // Get the element with the ID '_next'
   const n = document.getElementById('__next')
   const main = n.childNodes[1].childNodes[3].childNodes[1].childNodes[1] as HTMLElement
   return main
