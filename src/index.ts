@@ -10,10 +10,10 @@ import { Subject, Subscription, debounceTime } from "rxjs"
 const GenerateEN = "Generate"
 const GenerateJP = "生成"
 
-// not theme dependent
 // observe this at start
-const MAIN_WINDOW_CLASSNAME = "bAPOJ"
-// not theme dependent
+// note that xpath is one indexed
+// (//*[@id='_next']/div)[2]/div[4]/div[2]/div[2]
+const MAIN_WINDOW_CLASSNAME = "efUDVw"
 const SAVE_BUTTON_CLASSNAME = "hpVEuL"
 const TOASTIFY_CLASSNAME = "Toastify"
 const TOASTIFY_CONTAINER_CLASSNAME = "Toastify__toast-container"
@@ -22,6 +22,12 @@ const DEBOUNCE_TIME_MS = 600
 const DELAY_RANGE_MS: [number, number] = [1000, 3000]
 const BTN_NORMAL_COLOR = "rgb(245, 243, 194)"
 const BTN_STOP_COLOR = "rgb(245, 194, 194)"
+
+const getMain = () => {
+  const n = document.getElementById('__next')
+  const main = n.childNodes[1].childNodes[3].childNodes[1].childNodes[1] as HTMLElement
+  return main
+}
 
 const Text = {
   generateForeverMode: "Once",
@@ -93,11 +99,15 @@ let toastSub: Subscription | null = null
 let imageWindowClassName = O.none as O.Option<string>
 
 const getMainWindow = (): O.Option<Element> => {
-  const els = document.getElementsByClassName(MAIN_WINDOW_CLASSNAME)
-  if (els.length == 0) {
+  try {
+    const main = getMain()
+    if (!main.getAttribute("class").includes(MAIN_WINDOW_CLASSNAME)) {
+      console.warn(`main window class name is not ${MAIN_WINDOW_CLASSNAME}; the result might be wrong`)
+    }
+    return O.some(main)
+  } catch (e) {
     return O.none
   }
-  return O.some(els[0])
 }
 
 const randomRange = (min: number, max: number): number => {
