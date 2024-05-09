@@ -14,7 +14,6 @@ const GenerateJP = "生成"
 // note that xpath is one indexed
 // (//*[@id='_next']/div)[2]/div[4]/div[2]/div[2]
 const MAIN_WINDOW_CLASSNAME = "efUDVw"
-const SAVE_BUTTON_CLASSNAME = "hpVEuL"
 const TOASTIFY_CLASSNAME = "Toastify"
 const TOASTIFY_CONTAINER_CLASSNAME = "Toastify__toast-container"
 const DEBOUNCE_TIME_MS = 600
@@ -32,8 +31,6 @@ const getMain = () => {
 const Text = {
   generateForeverMode: "Once",
   stopGenerateForeverMode: "Generate Forever",
-  autoSaveEnabled: "Auto Save",
-  autoSaveDisabled: "Manual Save",
 }
 
 const btnStyle = `
@@ -88,11 +85,9 @@ const toastSubject = new Subject<GeneratedEvent>()
 const debounceToastObs = toastSubject.pipe(debounceTime(DEBOUNCE_TIME_MS))
 
 let isGeneratingForever = false
-let isAutoSave = true
 let generateBtns = [] as HTMLElement[]
 let subscription: Subscription | null = null
 let foreverBtn = O.none as O.Option<HTMLElement>
-let autoSaveBtn = O.none as O.Option<HTMLElement>
 let attrObs = O.none as O.Option<MutationObserver>
 let toastObs = O.none as O.Option<MutationObserver>
 let toastSub: Subscription | null = null
@@ -101,7 +96,7 @@ let imageWindowClassName = O.none as O.Option<string>
 const getMainWindow = (): O.Option<Element> => {
   try {
     const main = getMain()
-    if (!main.getAttribute("class").includes(MAIN_WINDOW_CLASSNAME)) {
+    if (main.getAttribute("class").includes(MAIN_WINDOW_CLASSNAME)) {
       console.warn(`main window class name is not ${MAIN_WINDOW_CLASSNAME}; the result might be wrong`)
     }
     return O.some(main)
@@ -141,15 +136,6 @@ const appendGenerateForeverButton = (customArea: HTMLElement): HTMLElement => {
   foreverBtn.style.backgroundColor = isGeneratingForever ? BTN_STOP_COLOR : BTN_NORMAL_COLOR
   customArea.appendChild(foreverBtn)
   return foreverBtn
-}
-
-const appendAutoSaveButton = (customArea: HTMLElement): HTMLElement => {
-  const saveBtn = document.createElement("button")
-  saveBtn.innerText = isAutoSave ? Text.autoSaveEnabled : Text.autoSaveDisabled
-  saveBtn.style.cssText = btnStyle
-  saveBtn.style.backgroundColor = isAutoSave ? BTN_NORMAL_COLOR : BTN_STOP_COLOR
-  customArea.appendChild(saveBtn)
-  return saveBtn
 }
 
 const pictureAttrObsCallback = (muts: MutationRecord[], obs: MutationObserver) => {
@@ -225,28 +211,10 @@ const toastObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mutatio
   }
 }
 
-const getSaveBtn = (): O.Option<Element> => {
-  const els = document.getElementsByClassName(SAVE_BUTTON_CLASSNAME)
-  if (els.length == 0) {
-    console.error("save button not found")
-    return O.none
-  }
-  return O.some(els[0])
-}
-
 const onPicture = (ev: GeneratedEvent) => {
   const el = ev.element
   const src = el.getAttribute("src")
   console.log("onPicture", ev)
-  if (isAutoSave) {
-    const saveBtn = getSaveBtn()
-    if (O.isNone(saveBtn)) {
-      console.error("save button not found")
-      return
-    }
-    console.log("click save button");
-    (saveBtn.value as HTMLElement).click()
-  }
   if (generateBtns.length == 0) {
     generateBtns = getGenerateButtons()
   }
@@ -269,7 +237,6 @@ const init = (): boolean => {
     subscription = null
   }
   foreverBtn = O.none
-  autoSaveBtn = O.none
 
   const main = getMainWindow()
   if (O.isNone(main)) {
@@ -333,20 +300,6 @@ const init = (): boolean => {
       foreverBtn.value.innerText = Text.stopGenerateForeverMode
       foreverBtn.value.style.backgroundColor = BTN_STOP_COLOR
       subscription = generatedSubject.subscribe(onPicture)
-    }
-  }
-  autoSaveBtn = O.some(appendAutoSaveButton(customArea.value))
-  assertSome(autoSaveBtn)
-  autoSaveBtn.value.onclick = () => {
-    assertSome(autoSaveBtn)
-    if (isAutoSave) {
-      isAutoSave = false
-      autoSaveBtn.value.innerText = Text.autoSaveDisabled
-      autoSaveBtn.value.style.backgroundColor = BTN_STOP_COLOR
-    } else {
-      isAutoSave = true
-      autoSaveBtn.value.innerText = Text.autoSaveEnabled
-      autoSaveBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
     }
   }
 
@@ -418,3 +371,6 @@ const init = (): boolean => {
       }
     }, 1000)
   })()
+
+  // @ts-expect-error
+  window.init_gen_4eva = init
