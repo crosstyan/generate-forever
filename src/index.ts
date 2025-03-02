@@ -13,7 +13,7 @@ const GenerateJP = "生成"
 // observe this at start
 // note that xpath is one indexed
 // (//*[@id='_next']/div)[2]/div[4]/div[2]/div[2]
-const MAIN_WINDOW_CLASSNAME = "efUDVw"
+const MAIN_WINDOW_CLASSNAME = "iRxaKk"
 const TOASTIFY_CLASSNAME = "Toastify"
 const TOASTIFY_CONTAINER_CLASSNAME = "Toastify__toast-container"
 const DEBOUNCE_TIME_MS = 600
@@ -24,7 +24,7 @@ const BTN_STOP_COLOR = "rgb(245, 194, 194)"
 
 const getMain = () => {
   const n = document.getElementById('__next')
-  const main = n.childNodes[1].childNodes[3].childNodes[1].childNodes[1] as HTMLElement
+  const main = n.childNodes[1].childNodes[3].childNodes[1].childNodes[0].childNodes[1].childNodes[2] as HTMLElement
   return main
 }
 
@@ -96,7 +96,7 @@ let imageWindowClassName = O.none as O.Option<string>
 const getMainWindow = (): O.Option<Element> => {
   try {
     const main = getMain()
-    if (main.getAttribute("class").includes(MAIN_WINDOW_CLASSNAME)) {
+    if (!main.getAttribute("class").includes(MAIN_WINDOW_CLASSNAME)) {
       console.warn(`main window class name is not ${MAIN_WINDOW_CLASSNAME}; the result might be wrong`)
     }
     return O.some(main)
@@ -372,5 +372,5 @@ const init = (): boolean => {
     }, 1000)
   })()
 
-  // @ts-expect-error
-  window.init_gen_4eva = init
+// @ts-expect-error
+window.init_gen_4eva = init
