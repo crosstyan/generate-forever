@@ -12,7 +12,18 @@ const main = async () => {
   console.log("PREFIX_FILE", PREFIX_FILE)
   console.log("BUILT_FILE", BUILT_FILE)
   console.log("OUT_FILE", OUT_FILE)
-  const revision = new Promise<string>((resolve, reject) => {
+
+  const ver = (await new Promise<string>((resolve, reject) => {
+    exec("git describe --tags --abbrev=0", (err, stdout, stderr) => {
+      if (err) {
+        reject({ err, stderr })
+      } else {
+        resolve(stdout.trim())
+      }
+    })
+  })).replace(/^v/, "")
+
+  const rev = await new Promise<string>((resolve, reject) => {
     exec("git rev-parse --short HEAD", (err, stdout, stderr) => {
       if (err) {
         reject({ err, stderr })
@@ -25,12 +36,12 @@ const main = async () => {
   const built = await open(BUILT_FILE, "r")
   const prefixContent = await prefix.readFile("utf-8")
   const builtContent = await built.readFile("utf-8")
-  const rev = await revision
+  const versionString = `${ver}-${rev}`
   const prefixWithRevision = prefixContent.replace(
     /@REVISION@/g,
-    rev.toString()
+    versionString
   )
-  console.log("REVISION", rev)
+  console.log("VERSION", versionString)
   const concated = prefixWithRevision + builtContent
   const out = await open(OUT_FILE, "w")
   await out.writeFile(concated)
