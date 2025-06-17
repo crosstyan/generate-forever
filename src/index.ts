@@ -23,9 +23,11 @@ const BTN_NORMAL_COLOR = "rgb(245, 243, 194)"
 const BTN_STOP_COLOR = "rgb(245, 194, 194)"
 
 const getMain = () => {
-  const n = document.getElementById('__next')
-  const main = n.childNodes[1].childNodes[3].childNodes[1].childNodes[0].childNodes[1].childNodes[2] as HTMLElement
-  return main
+  const n = document.getElementsByClassName('display-grid-images')
+  if (n.length != 1) {
+    throw new Error("display-grid-images not found or ambiguous")
+  }
+  return n[0]
 }
 
 const Text = {
@@ -96,11 +98,9 @@ let imageWindowClassName = O.none as O.Option<string>
 const getMainWindow = (): O.Option<Element> => {
   try {
     const main = getMain()
-    if (!main.getAttribute("class").includes(MAIN_WINDOW_CLASSNAME)) {
-      console.warn(`main window class name is not ${MAIN_WINDOW_CLASSNAME}; the result might be wrong`)
-    }
     return O.some(main)
   } catch (e) {
+    console.error("cannot find main window", e)
     return O.none
   }
 }
@@ -164,8 +164,7 @@ const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mu
         const eles = added.getElementsByTagName("img")
         if (eles.length != 0) {
           const classes = added.className
-          console.log("picture frame", added)
-          console.log("picture frame class", classes)
+          console.debug("picture frame", added)
           imageWindowClassName = O.some(classes)
           const attrObserver = new MutationObserver(pictureAttrObsCallback)
           attrObs = O.some(attrObserver)
@@ -214,15 +213,15 @@ const toastObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mutatio
 const onPicture = (ev: GeneratedEvent) => {
   const el = ev.element
   const src = el.getAttribute("src")
-  console.log("onPicture", ev)
+  console.debug("onPicture", ev)
   if (generateBtns.length == 0) {
     generateBtns = getGenerateButtons()
   }
   const [min, max] = DELAY_RANGE_MS
   const delay = Math.floor(Math.random() * (max - min)) + min
-  console.log("delay", delay)
+  console.debug("delay", delay)
   setTimeout(() => {
-    console.log("click generate button")
+    console.info("click generate button")
     generateBtns[0].click()
   }, delay)
 }
