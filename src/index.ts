@@ -86,10 +86,9 @@ let isGeneratingForever = false
 let generateBtns = [] as HTMLElement[]
 let subscription: Subscription | null = null
 let foreverBtn = O.none as O.Option<HTMLElement>
-let attrObs = O.none as O.Option<MutationObserver>
 let toastObs = O.none as O.Option<MutationObserver>
+let mainWindowObs = O.none as O.Option<MutationObserver>
 let toastSub: Subscription | null = null
-let imageWindowClassName = O.none as O.Option<string>
 
 const getMainWindow = (): O.Option<Element> => {
   try {
@@ -134,7 +133,10 @@ const appendGenerateForeverButton = (customArea: HTMLElement): HTMLElement => {
   return foreverBtn
 }
 
-const pictureAttrObsCallback = (muts: MutationRecord[], obs: MutationObserver) => {
+const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: MutationObserver) => {
+  // I need to get the attribute changes
+  // I could just skip the attr observer and use the main window observer only
+  // see also `image-grid-image` (should be target)
   for (const rec of muts) {
     if (rec.attributeName == "src") {
       const el = rec.target as Element
@@ -146,41 +148,6 @@ const pictureAttrObsCallback = (muts: MutationRecord[], obs: MutationObserver) =
           element: el
         }
         generatedSubject.next(ev)
-      }
-    }
-  }
-}
-
-
-const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: MutationObserver) => {
-  for (const rec of muts) {
-    for (const added of rec.addedNodes) {
-      if (added instanceof Element) {
-        added as Element
-        const els = added.getElementsByTagName("img")
-        if (els.length != 0) {
-          const classes = added.className
-          console.debug("picture frame", added)
-          imageWindowClassName = O.some(classes)
-          const attrObserver = new MutationObserver(pictureAttrObsCallback)
-          attrObs = O.some(attrObserver)
-          attrObserver.observe(added, {
-            subtree: true,
-            childList: true,
-            attributes: true
-          })
-          const ev: GeneratedEvent = {
-            time: new Date(),
-            observer: attrObserver,
-            element: added
-          }
-          generatedSubject.next(ev)
-          obs.disconnect()
-        } else {
-          console.warn("not picture frame", added)
-        }
-      } else {
-        console.error("added is not Element", added)
       }
     }
   }
@@ -238,30 +205,13 @@ const init = (): boolean => {
     return false
   }
 
-  if (O.isSome(attrObs)) {
-    attrObs.value.disconnect()
-    assertSome(imageWindowClassName)
-    const eles = document.getElementsByClassName(imageWindowClassName.value)
-    if (eles.length != 1) {
-      console.error("image parent not found or ambiguous")
-      return false
-    }
-    const added = eles[0]
-    const attrObserver = new MutationObserver(pictureAttrObsCallback)
-    attrObs = O.some(attrObserver)
-    attrObserver.observe(added, {
+  if (O.isNone(mainWindowObs)) {
+    mainWindowObs = O.some(new MutationObserver(mainWindowObsCallback))
+    assertSome(mainWindowObs)
+    mainWindowObs.value.observe(main.value, {
+      childList: true,
       subtree: true,
-      childList: true,
       attributes: true
-    })
-  } else {
-    // TODO: I need to get the attribute changes
-    // I could just skip the attr observer and use the main window observer only
-    // see also `image-grid-image` (should be target)
-    const mainWindowObs = new MutationObserver(mainWindowObsCallback)
-    mainWindowObs.observe(main.value, {
-      childList: true,
-      subtree: true
     })
   }
 
@@ -322,7 +272,7 @@ const init = (): boolean => {
       childList: true,
       attributes: true
     })
-    toastSub = debounceToastObs.subscribe((ev) => {
+    toastSub = debounceToastObs.subscribe((_) => {
       if (isGeneratingForever) {
         console.warn("toastify detected, might be an error; click generate button")
         const delay = randomRange(200, 400)
@@ -346,9 +296,9 @@ const init = (): boolean => {
   // you could call this function from the console
   // without the need to reload the page
   // https://developer.mozilla.org/en-US/docs/Web/Events/Creating_and_triggering_events
-  if (O.isNone(attrObs)) {
+  if (O.isNone(mainWindowObs)) {
     console.log("first start, listen to `gen_4eva` message")
-    window.addEventListener("gen_4eva", (ev) => {
+    window.addEventListener("gen_4eva", (_) => {
       console.log("trigger init from message")
       init()
     })
