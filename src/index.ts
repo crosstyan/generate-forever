@@ -10,10 +10,6 @@ import { Subject, Subscription, debounceTime } from "rxjs"
 const GenerateEN = "Generate"
 const GenerateJP = "生成"
 
-// observe this at start
-// note that xpath is one indexed
-// (//*[@id='_next']/div)[2]/div[4]/div[2]/div[2]
-const MAIN_WINDOW_CLASSNAME = "iRxaKk"
 const TOASTIFY_CLASSNAME = "Toastify"
 const TOASTIFY_CONTAINER_CLASSNAME = "Toastify__toast-container"
 const DEBOUNCE_TIME_MS = 600
@@ -161,8 +157,8 @@ const mainWindowObsCallback: MutationCallback = (muts: MutationRecord[], obs: Mu
     for (const added of rec.addedNodes) {
       if (added instanceof Element) {
         added as Element
-        const eles = added.getElementsByTagName("img")
-        if (eles.length != 0) {
+        const els = added.getElementsByTagName("img")
+        if (els.length != 0) {
           const classes = added.className
           console.debug("picture frame", added)
           imageWindowClassName = O.some(classes)
@@ -239,7 +235,6 @@ const init = (): boolean => {
 
   const main = getMainWindow()
   if (O.isNone(main)) {
-    console.error("main window not found")
     return false
   }
 
@@ -260,6 +255,9 @@ const init = (): boolean => {
       attributes: true
     })
   } else {
+    // TODO: I need to get the attribute changes
+    // I could just skip the attr observer and use the main window observer only
+    // see also `image-grid-image` (should be target)
     const mainWindowObs = new MutationObserver(mainWindowObsCallback)
     mainWindowObs.observe(main.value, {
       childList: true,
@@ -280,25 +278,33 @@ const init = (): boolean => {
   }
   foreverBtn = O.some(appendGenerateForeverButton(customArea.value))
   assertSome(foreverBtn)
-  foreverBtn.value.onclick = () => {
+  const enterForeverMode = () => {
     assertSome(foreverBtn)
-    if (isGeneratingForever) {
-      console.log("exit forever mode")
-      isGeneratingForever = false
-      foreverBtn.value.innerText = Text.generateForeverMode
-      foreverBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
-      if (subscription != null) {
-        subscription.unsubscribe()
-        subscription = null
-      } else {
-        console.error("subscription is null")
-      }
+    console.log("enter forever mode")
+    isGeneratingForever = true
+    foreverBtn.value.innerText = Text.stopGenerateForeverMode
+    foreverBtn.value.style.backgroundColor = BTN_STOP_COLOR
+    subscription = generatedSubject.subscribe(onPicture)
+  }
+  const exitForeverMode = () => {
+    assertSome(foreverBtn)
+    console.log("exit forever mode")
+    isGeneratingForever = false
+    foreverBtn.value.innerText = Text.generateForeverMode
+    foreverBtn.value.style.backgroundColor = BTN_NORMAL_COLOR
+    if (subscription != null) {
+      subscription.unsubscribe()
+      subscription = null
     } else {
-      console.log("enter forever mode")
-      isGeneratingForever = true
-      foreverBtn.value.innerText = Text.stopGenerateForeverMode
-      foreverBtn.value.style.backgroundColor = BTN_STOP_COLOR
-      subscription = generatedSubject.subscribe(onPicture)
+      console.error("subscription is null")
+    }
+  }
+
+  foreverBtn.value.onclick = () => {
+    if (isGeneratingForever) {
+      exitForeverMode()
+    } else {
+      enterForeverMode()
     }
   }
 
@@ -358,7 +364,7 @@ const init = (): boolean => {
    * when to use? when you find that the buttons are missing 
    * (usually after inpaint)
    */
-
+  enterForeverMode()
   return true
 }
 
