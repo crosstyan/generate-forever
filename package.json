@@ -1,6 +1,6 @@
 {
   "name": "generate_forever",
-  "version": "0.2.3",
+  "version": "0.2.3-r4",
   "description": "",
   "main": "index.js",
   "scripts": {

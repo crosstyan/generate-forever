@@ -234,7 +234,10 @@ const init = (): boolean => {
     isGeneratingForever = true
     foreverBtn.value.innerText = Text.stopGenerateForeverMode
     foreverBtn.value.style.backgroundColor = BTN_STOP_COLOR
-    subscription = generatedSubject.subscribe(onPicture)
+    // we need the debounce to prevent the streaming going crazy
+    subscription = generatedSubject
+      .pipe(debounceTime(DEBOUNCE_TIME_MS))
+      .subscribe(onPicture)
   }
   const exitForeverMode = () => {
     assertSome(foreverBtn)
