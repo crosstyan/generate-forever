@@ -314,7 +314,6 @@ const init = (): boolean => {
    * when to use? when you find that the buttons are missing 
    * (usually after inpaint)
    */
-  enterForeverMode()
   return true
 }
 
